@@ -13,7 +13,7 @@ import (
 
 var serverURL = "https://auth.acme-dns.io"
 
-type account struct {
+type registrationResponse struct {
 	Username   string `json:"username,omitempty"`
 	Password   string `json:"password,omitempty"`
 	Subdomain  string `json:"subdomain,omitempty"`
@@ -25,7 +25,7 @@ func createDomainConfig(t *testing.T) DomainConfig {
 	if err != nil {
 		t.Fatal("Failed to register an account")
 	}
-	var acc account
+	var acc registrationResponse
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal("Failed to read response body")
@@ -55,7 +55,7 @@ func makeRecord(recordValue string) libdns.Record {
 	}
 }
 
-func TestAppendRecords(t *testing.T) {
+func TestAppendRecordsWithDomainConfigs(t *testing.T) {
 	domain1, domain2 := "example.com", "sub.example.com"
 	config1, config2 := createDomainConfig(t), createDomainConfig(t)
 	value1, value2, value3 :=
@@ -109,6 +109,52 @@ func TestAppendRecords(t *testing.T) {
 		t.Fatalf("Expected record %s, not found in %v", value2, newRecords)
 	}
 	if value3 != newRecords[0] && value3 != newRecords[1] {
+		t.Fatalf("Expected record %s, not found in %v", value2, newRecords)
+	}
+}
+
+func TestAppendRecordsWithAccountConfig(t *testing.T) {
+	value1, value2 :=
+		"__validation_token_received_from_the_ca_1__",
+		"__validation_token_received_from_the_ca_2__"
+	domainConfig := createDomainConfig(t)
+	fullDomain := domainConfig.FullDomain
+	p := Provider{
+		Username:  domainConfig.Username,
+		Password:  domainConfig.Password,
+		Subdomain: domainConfig.Subdomain,
+		ServerURL: serverURL,
+	}
+
+	_, err := p.AppendRecords(
+		context.TODO(),
+		"anything.example.com",
+		[]libdns.Record{makeRecord(value1)},
+	)
+	if err != nil {
+		t.Fatal("Failed to append records: ", err)
+	}
+
+	_, err = p.AppendRecords(
+		context.TODO(),
+		"anything.else.example.com",
+		[]libdns.Record{makeRecord(value2)},
+	)
+	if err != nil {
+		t.Fatal("Failed to append records: ", err)
+	}
+
+	newRecords, err := net.LookupTXT(fullDomain)
+	if err != nil {
+		t.Fatal("TXT record lookup failed")
+	}
+	if len(newRecords) != 2 {
+		t.Fatal("2 TXT records expected")
+	}
+	if value1 != newRecords[0] && value1 != newRecords[1] {
+		t.Fatalf("Expected record %s, not found in %v", value2, newRecords)
+	}
+	if value2 != newRecords[0] && value2 != newRecords[1] {
 		t.Fatalf("Expected record %s, not found in %v", value2, newRecords)
 	}
 }
