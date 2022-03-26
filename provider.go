@@ -21,10 +21,6 @@ type DomainConfig struct {
 	ServerURL  string `json:"server_url,omitempty"`
 }
 
-// Provider.Configs defines a map from domain string to
-// DomainConfig. It uses the same structure as ACME-DNS client
-// JSON storage file (https://github.com/acme-dns/acme-dns-client).
-
 // Provider must be set up in one of two ways:
 //
 // 1) Set Configs field. Configs field defines a map from domains
@@ -41,10 +37,13 @@ type Provider struct {
 
 	// ACME-DNS account username as returned by ACME-DNS API /register endpoint.
 	Username string `json:"username,omitempty"`
+
 	// ACME-DNS account password as returned by ACME-DNS API /register endpoint.
 	Password string `json:"password,omitempty"`
+
 	// ACME-DNS account subdomain as returned by ACME-DNS API /register endpoint.
 	Subdomain string `json:"subdomain,omitempty"`
+
 	// ACME-DNS API base URL. For example, https://auth.acme-dns.io
 	ServerURL string `json:"server_url,omitempty"`
 }
