@@ -112,6 +112,7 @@ func updateTxtValue(acc account, value string) error {
 	req, err := http.NewRequest("POST", acc.ServerURL+"/update", bytes.NewBuffer(body))
 	req.Header.Set("X-Api-User", acc.Username)
 	req.Header.Set("X-Api-Key", acc.Password)
+	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{Timeout: time.Second * 30}
 	resp, err := client.Do(req)
 	if err != nil {
