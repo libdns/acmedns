@@ -177,8 +177,37 @@ func (p *Provider) DeleteRecords(ctx context.Context, zone string, recs []libdns
 	return nil, nil
 }
 
+// Implements libdns.RecordSetter
+//
+// The only operation Joohoi's ACME-DNS API supports is a rolling update
+// of two TXT records.
+//
+// If Provider Configs field is not nil, zone and record names are used to
+// select relevant credentials from Provider.Configs.
+//
+// If Configs is nil and Provider is set up with non-nil Username,
+// Password, Subdomain and ServerURL fields, these credentials
+// will be used to update ACME-DNS account TXT records regardless
+// of what zone and record names are passed.
+//
+// Only TXT records are supported. ID, TTL and Priority fields
+// of libdns.Record are ignored.
+func (p *Provider) SetRecords(ctx context.Context, zone string, recs []libdns.Record) ([]libdns.Record, error) {
+	return p.AppendRecords(ctx, zone, recs)
+}
+
+// Implements libdns.RecordGetter
+//
+// Since Joohoi's ACME-DNS does not support getting records, this method
+// will always return an error.
+func (p *Provider) GetRecords(ctx context.Context, zone string) ([]libdns.Record, error) {
+	return nil, fmt.Errorf("acmedns provider does not support getting records")
+}
+
 // Interface guards.
 var (
 	_ libdns.RecordAppender = (*Provider)(nil)
 	_ libdns.RecordDeleter  = (*Provider)(nil)
+	_ libdns.RecordGetter   = (*Provider)(nil)
+	_ libdns.RecordSetter   = (*Provider)(nil)
 )
