@@ -55,6 +55,14 @@ type account struct {
 	ServerURL string
 }
 
+type acmeDNSRecord struct {
+	rr libdns.RR
+}
+
+func (r acmeDNSRecord) RR() libdns.RR {
+	return r.rr
+}
+
 func (p *Provider) selectAccount(zone string, name string) (*account, error) {
 	if p.Configs != nil {
 		domain := name + "." + zone
@@ -142,18 +150,19 @@ func updateTxtValue(acc account, value string) error {
 func (p *Provider) AppendRecords(ctx context.Context, zone string, recs []libdns.Record) ([]libdns.Record, error) {
 	appendedRecords := []libdns.Record{}
 	for _, record := range recs {
-		if record.Type != "TXT" {
+		rr := record.RR()
+		if rr.Type != "TXT" {
 			return appendedRecords, fmt.Errorf("joohoi_acme_dns provider only supports adding TXT records")
 		}
-		acc, err := p.selectAccount(zone, record.Name)
+		acc, err := p.selectAccount(zone, rr.Name)
 		if err != nil {
 			return appendedRecords, err
 		}
-		err = updateTxtValue(*acc, record.Value)
+		err = updateTxtValue(*acc, rr.Data)
 		if err != nil {
 			return appendedRecords, err
 		}
-		appendedRecords = append(appendedRecords, libdns.Record{Type: "TXT", Name: record.Name, Value: record.Value})
+		appendedRecords = append(appendedRecords, acmeDNSRecord{rr: libdns.RR{Type: "TXT", Name: rr.Name, Data: rr.Data}})
 
 	}
 	return appendedRecords, nil

@@ -48,10 +48,10 @@ func createDomainConfig(t *testing.T) DomainConfig {
 }
 
 func makeRecord(recordValue string) libdns.Record {
-	return libdns.Record{
-		Type:  "TXT",
-		Name:  "_acme-challenge",
-		Value: recordValue,
+	return libdns.RR{
+		Type: "TXT",
+		Name: "_acme-challenge",
+		Data: recordValue,
 	}
 }
 
