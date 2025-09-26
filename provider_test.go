@@ -3,7 +3,7 @@ package acmedns
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"testing"
@@ -26,7 +26,7 @@ func createDomainConfig(t *testing.T) DomainConfig {
 		t.Fatal("Failed to register an account")
 	}
 	var acc registrationResponse
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal("Failed to read response body")
 	}

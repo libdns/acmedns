@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/libdns/libdns"
@@ -65,13 +66,9 @@ func (r acmeDNSRecord) RR() libdns.RR {
 
 func (p *Provider) selectAccount(zone string, name string) (*account, error) {
 	if p.Configs != nil {
-		domain := name + "." + zone
-		if domain[len(domain)-1:] == "." {
-			domain = domain[:len(domain)-1]
-		}
-		if domain[:len(acmePrefix)] == acmePrefix {
-			domain = domain[len(acmePrefix):]
-		}
+		domain := libdns.AbsoluteName(name, zone)
+		domain = strings.Trim(domain, ".")
+		domain = strings.TrimPrefix(domain, acmePrefix)
 		config, found := p.Configs[domain]
 		if !found {
 			return nil, fmt.Errorf("Config for domain %s not found", domain)
